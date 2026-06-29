@@ -27,7 +27,7 @@
 
     .page { display: none !important; min-height: 100vh; }
     .page.active { display: block !important; }
-    #page-home.active { display: flex !important; }
+    #page-home.active { display: flex !important; overflow: hidden; height: 100vh; }
 
     /* â”€â”€ NAV â”€â”€ */
     .site-nav {
@@ -65,7 +65,7 @@
       font-size: 11px;
       letter-spacing: 0.1em;
       text-transform: uppercase;
-      color: rgba(255,255,255,0.75);
+      color: #888;
       background: none;
       border: none;
       cursor: pointer;
@@ -73,7 +73,7 @@
       display: none;
       transition: color 0.15s;
     }
-    .floating-back:hover { color: #fff; }
+    .floating-back:hover { color: #bbb; }
     .floating-back.visible { display: block; }
 
     .site-logo {
@@ -99,12 +99,18 @@
     }
     .nav-links li button:hover,
     .nav-links li.active button { color: #fff; }
+    .site-nav.on-contact .nav-name,
+    .site-nav.on-contact .nav-links li button { color: #111 !important; }
+    .site-nav.on-contact .nav-links li button:hover,
+    .site-nav.on-contact .nav-name:hover { color: #000 !important; }
+    .site-nav.on-projects .nav-name { color: rgba(255,255,255,0.85) !important; }
+    .site-nav.on-projects .nav-name:hover { color: #fff !important; }
 
     .nav-right { display: flex; align-items: flex-start; gap: 2rem; white-space: nowrap; }
     .nav-location {
       font-family: 'EB Garamond', Georgia, serif; font-size: 13px; font-weight: 400;
       letter-spacing: 0.28em; text-transform: uppercase;
-      color: var(--red); line-height: 1; padding-top: 2px;
+      color: #fff; line-height: 1; padding-top: 2px;
     }
     .nav-social {
       font-family: 'EB Garamond', Georgia, serif; font-weight: 400; font-size: 15px;
@@ -169,6 +175,24 @@
       scrollbar-width: none;
     }
     .projects-hscroll-inner::-webkit-scrollbar { display: none; }
+    .artworks-arrow {
+      position: fixed;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 2.2rem;
+      color: #888;
+      padding: 1rem;
+      z-index: 50;
+      transition: color 0.2s, opacity 0.2s;
+      line-height: 1;
+    }
+    .artworks-arrow:hover { color: #bbb; }
+    .artworks-arrow-left  { left: 1.2rem; }
+    .artworks-arrow-right { right: 1.2rem; }
+    #page-artworks:not(.active) .artworks-arrow { display: none; }
     .project-card {
       position: relative;
       flex: 0 0 calc(50vw - 1rem);
@@ -252,7 +276,20 @@
     }
     .detail-images { display: flex; flex-direction: column; gap: 5rem; padding: 0 4rem 4rem; }
     .detail-image-block { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-items: start; }
-    .detail-image-block img { width: 100%; display: block; }
+    .detail-image-block img { width: 100%; display: block; cursor: zoom-in; }
+    .lightbox {
+      display: none;
+      position: fixed; inset: 0; z-index: 999;
+      background: rgba(0,0,0,0.92);
+      align-items: center; justify-content: center;
+      cursor: zoom-out;
+    }
+    .lightbox.open { display: flex; }
+    .lightbox img {
+      max-width: 90vw; max-height: 90vh;
+      object-fit: contain; display: block;
+      cursor: default;
+    }
     .detail-image-caption {
       font-family: 'EB Garamond', Georgia, serif;
       font-size: 1rem; line-height: 1.85; color: #444;
@@ -294,7 +331,7 @@
       min-height: 100vh;
       flex-direction: column;
     }
-    #page-statement.active { display: flex !important; }
+    #page-statement.active { display: flex !important; background: #0e0d0c !important; color: rgba(255,255,255,0.75) !important; }
 
     .about-diptych {
       display: grid;
@@ -308,17 +345,20 @@
 
     .about-col { display: flex; flex-direction: column; }
     .about-name-col {
-      font-family: var(--serif); font-style: italic;
-      font-size: clamp(2.2rem, 3.8vw, 3.4rem);
+      font-family: 'Ballet', cursive;
+      font-weight: 400;
+      font-size: clamp(3rem, 5.5vw, 5.5rem);
       color: rgba(255,255,255,0.9);
       line-height: 1.1;
-      letter-spacing: 0.01em;
+      letter-spacing: 0;
       padding: 2.5rem 2rem;
       white-space: nowrap;
+      text-align: center;
     }
+    .about-name-col .initial { font-family: 'Monsieur La Doulaise', cursive; }
     .about-bio-col {
-      font-family: var(--serif); font-style: italic;
-      font-size: clamp(0.85rem, 1.05vw, 1rem);
+      font-family: 'EB Garamond', Georgia, serif; font-style: italic;
+      font-size: clamp(1rem, 1.3vw, 1.2rem);
       line-height: 2;
       color: rgba(255,255,255,0.75);
       padding: 2.5rem 2rem;
@@ -434,6 +474,8 @@
     }
     .contact-email a { color: inherit; text-decoration: none; border-bottom: 1px solid #ccc; }
 
+    #page-artwork-detail { padding-top: 8rem; padding-bottom: 6rem; background: var(--paper); }
+
     /* â”€â”€ ARTWORK DETAIL META â”€â”€ */
     .artwork-detail-meta {
       max-width: 600px;
@@ -480,6 +522,9 @@
 <body>
 
   <button class="floating-back" id="floating-back" onclick="showPage('artworks')">&#8592; Artworks</button>
+  <div class="lightbox" id="lightbox" onclick="closeLightbox()">
+    <img id="lightbox-img" src="" alt="" onclick="event.stopPropagation()" />
+  </div>
   <img class="site-logo" src="logo.png" alt="Daeun Choi" onclick="showPage('home')" />
 
   <nav class="site-nav">
@@ -493,7 +538,7 @@
     </ul>
     <div class="nav-right">
       <span class="nav-location">Los Angeles</span>
-      <div>
+      <div style="display:none">
         <a href="https://instagram.com" target="_blank" class="nav-social">Instagram</a>
         <span class="nav-social-sep"> I </span>
         <a href="https://vimeo.com" target="_blank" class="nav-social">Vimeo</a>
@@ -533,14 +578,15 @@
     <div class="about-diptych">
       <div class="about-col">
         <img class="about-diptych-img" src="about-portrait.JPG" alt="Daeun Choi" />
-        <div class="about-name-col">Daeun Choi</div>
+        <div class="about-bio-col">
+          <p>Hello! I'm Daeun, I'm an economics and art history student with a fine arts background, and a self-taught AI creative based in Los Angeles.</p>
+          <p>I specialize in crafting visual ad content, from concept to finished product, and my mix of training means I think about aesthetics and consumer behavior at the same time.</p>
+          <p>I care a lot about making things that are both beautiful and effective. If that sounds like what you need, let's talk :)</p>
+        </div>
       </div>
       <div class="about-col">
-        <img class="about-diptych-img" src="about-flower.png" alt=— />
-        <div class="about-bio-col">
-          <p>[Write something about yourself here "” who you are, what draws you to make things, the questions your work keeps returning to.]</p>
-          <p>Based in Los Angeles. Open to collaborations, commissions, and conversations.</p>
-        </div>
+        <img class="about-diptych-img" src="about-flower.png" alt="flower arrangement" />
+        <div class="about-name-col"><span class="initial">D</span>aeun Choi</div>
       </div>
     </div>
   </div>
@@ -550,6 +596,8 @@
     <div class="projects-hscroll-track">
       <div class="projects-hscroll-inner" id="artworks-grid"></div>
     </div>
+    <button class="artworks-arrow artworks-arrow-left" id="artworks-arrow-left" onclick="artworksScroll(-1)" aria-label="Previous">&#10229;</button>
+    <button class="artworks-arrow artworks-arrow-right" id="artworks-arrow-right" onclick="artworksScroll(1)" aria-label="Next">&#10230;</button>
   </div>
 
   <!-- ARTWORK DETAIL -->
@@ -597,11 +645,11 @@
   <script>
     // â”€â”€ PROJECT DATA â”€â”€
     const projects = [
-      { id: 'project-1', title: '무게 — M u g e', titleHtml: '<span style=”font-family:\'Hahmlet\',serif”>무게</span> — M u g e', thumb: 'project1-cover.jpg', images: [
+      { id: 'project-1', title: '무게 — M u g e', titleHtml: '<span style="font-family:\'Hahmlet\',serif">무게</span> — M u g e', thumb: 'project1-cover.jpg', images: [
           { src: 'project1-cover.jpg', caption: '<strong>The Death Curl</strong><br><em>Choi, 2026, Midjourney</em><br><br>I\'ve always been drawn to flowers right before they go. Just slightly past their peak, starting to soften at the edges. That in-between state grips me more than a full bloom.<br><br>These are sweet peas, mostly. Shot against black so the white really sits. White flowers against a dark background is a pretty old idea. The Dutch masters were doing it in the 1600s, using fruit and flowers to quietly remind you that things aren\'t permanent.' },
           { src: 'project1-b.jpg',     caption: '<strong>Where She Falls</strong><br><em>Choi, 2026, Midjourney</em><br><br>The arrangement sits in a dark turned-wood urn on a pedestal, which felt right.<br><br>Amaranthus means "unfading" in Greek, which is a little ironic given how dramatically it droops. But the name comes from its history as a symbol of immortality. It was used in funeral rites and mourning rituals across cultures for centuries. It looks like it\'s grieving, but is immortalized.' },
-          { src: 'about-flower.png',   caption: '' },
-          { src: 'project1-a.jpg',     caption: '' },
+          { src: 'about-flower.png',   caption: '<strong>...</strong><br><em>Choi, 2026, Midjourney</em><br><br>A meditation on the threshold between vitality and dissolution. The arrangement draws from the Japanese ikebana tradition and each stem is placed to make the empty space visible.<br><br>The near-black ranunculus and scabiosa occupy the color territory. A burgundy so saturated it absorbs light rather than reflecting it. Against them, a single cream anemone contradicts. The pampas grass rises pale and weightless.<br><br>This is a work about the specific beauty of impermanence.<br><br><em>Fresh ranunculus, scabiosa, anemone, pampas grass</em>' },
+          { src: 'project1-a.jpg',     caption: '<strong>Encasing</strong><br><em>Choi, 2026, Midjourney</em><br><br>The spider chrysanthemum&#39;s petals unravel in a slow, public disintegration that has been mistaken for blooming. The oncidium extends to the right like it cannot find a natural place to stop.<br><br><em>Spider chrysanthemum, oncidium orchid, aubergine glass vase (unrated)</em>' },
         ], desc: '' },
       { id: 'project-2', title: 'Project Two',   thumb: '', images: [], desc: 'Title, medium, dimensions, year.' },
       { id: 'project-3', hidden: true, title: 'Project Three', thumb: '', images: [], desc: 'Title, medium, dimensions, year.' },
@@ -840,7 +888,7 @@
 
       function onWheel(e) {
         e.preventDefault();
-        inner.scrollLeft += (e.deltaY + e.deltaX) * 10;
+        inner.scrollLeft += (e.deltaY + e.deltaX) * 25;
       }
 
       let touchStartX = 0, touchStartY = 0, scrollStart = 0;
@@ -895,6 +943,8 @@
       const nav = document.querySelector('.site-nav');
       nav.classList.toggle('on-home', name === 'home' || name === 'artwork-detail');
       nav.classList.toggle('on-artwork', name === 'artworks');
+      nav.classList.toggle('on-contact', name === 'contact');
+      nav.classList.toggle('on-projects', name === 'projects');
       document.getElementById('floating-back').classList.toggle('visible', name === 'artwork-detail');
       document.documentElement.scrollTop = 0;
       document.body.scrollTop = 0;
@@ -908,7 +958,7 @@
       document.getElementById('detail-images').innerHTML = p.images.length
         ? p.images.map(img => `
             <div class="detail-image-block">
-              <img src="${img.src || img}" alt="${p.title.replace(/<[^>]*>/g,'')}" loading="lazy" />
+              <img src="${img.src || img}" alt="${p.title.replace(/<[^>]*>/g,'')}" loading="lazy" onclick="openLightbox(this.src)" />
               <div class="detail-image-caption"><p>${img.caption || ''}</p></div>
             </div>`).join('')
         : `<div class="detail-image-placeholder">Add project images</div>`;
@@ -934,73 +984,74 @@
     const artworks = [
       {
         id: 'a-1',
-        title: 'Title',
-        medium: 'Medium, Year',
+        title: 'Omniscient',
+        medium: 'Charcoal, 2024',
         image: 'IMG_3059.jpg',
         statement: 'Artist statement for this work "” describe the concept, materials, and intent.',
       },
       {
         id: 'a-2',
-        title: 'Title',
-        medium: 'Medium, Year',
+        title: 'Looming',
+        medium: 'Charcoal, 2024',
         image: 'IMG_3135.jpg',
         statement: 'Artist statement for this work "” describe the concept, materials, and intent.',
       },
       {
         id: 'a-3',
-        title: 'Title',
-        medium: 'Medium, Year',
+        title: 'Unexpected Companion',
+        medium: 'Charcoal, 2025',
         image: 'IMG_3315.jpg',
-        statement: 'Artist statement for this work "” describe the concept, materials, and intent.',
+        statement: 'Artist statement for this work “” describe the concept, materials, and intent.',
       },
       {
         id: 'a-4',
-        title: 'Title',
-        medium: 'Medium, Year',
+        title: 'Sixth Sense',
+        medium: 'Charcoal, 2024',
         image: 'IMG_4359.jpg',
-        statement: 'Artist statement for this work "” describe the concept, materials, and intent.',
+        statement: 'Artist statement for this work “” describe the concept, materials, and intent.',
       },
       {
         id: 'a-5',
-        title: 'Title',
-        medium: 'Medium, Year',
+        title: 'Seeing Double',
+        medium: 'Charcoal, 2025',
         image: 'IMG_3669.jpg',
-        statement: 'Artist statement for this work "” describe the concept, materials, and intent.',
+        statement: 'Artist statement for this work “” describe the concept, materials, and intent.',
       },
       {
         id: 'a-6',
-        title: 'Title',
-        medium: 'Medium, Year',
+        title: 'Welcome Home',
+        medium: 'Charcoal, 2023',
         image: 'IMG_4311.jpg',
-        statement: 'Artist statement for this work "” describe the concept, materials, and intent.',
+        statement: 'Artist statement for this work “” describe the concept, materials, and intent.',
       },
       {
         id: 'a-7',
-        title: 'Title',
-        medium: 'Medium, Year',
+        title: 'Funk',
+        medium: 'Colored Pencils, 2023',
         image: 'IMG_4360.jpg',
-        statement: 'Artist statement for this work "” describe the concept, materials, and intent.',
+        statement: 'Artist statement for this work “” describe the concept, materials, and intent.',
       },
       {
         id: 'a-8',
-        title: 'Title',
-        medium: 'Medium, Year',
+        title: 'Uncaged Birds',
+        medium: 'Colored Pencils, 2024',
         image: 'IMG_3919.jpg',
-        statement: 'Artist statement for this work "” describe the concept, materials, and intent.',
+        statement: 'Artist statement for this work “” describe the concept, materials, and intent.',
       },
       {
         id: 'a-9',
-        title: 'Title',
-        medium: 'Medium, Year',
+        title: 'In Costa Rica',
+        medium: 'Acrylic on Canvas, 2023',
         image: 'IMG_2636.jpg',
-        statement: 'Artist statement for this work "” describe the concept, materials, and intent.',
+        statement: 'Artist statement for this work “” describe the concept, materials, and intent.',
       },
       {
         id: 'a-10',
-        title: 'Title',
-        medium: 'Medium, Year',
+        title: "We're all BLUE",
+        titleHtml: 'We&#39;re all <span style="font-family:&#39;Monsieur La Doulaise&#39;,cursive;">BLUE</span>',
+        medium: 'Acrylic on Canvas, 2022',
         image: 'IMG_4880.jpg',
-        statement: 'Artist statement for this work "” describe the concept, materials, and intent.',
+        statement: 'Artist statement for this work “” describe the concept, materials, and intent.',
       },
     ];
 
@@ -1015,13 +1066,7 @@
     }
 
     function initArtworksScroll() {
-      const page  = document.getElementById('page-artworks');
       const inner = document.getElementById('artworks-grid');
-
-      function onWheel(e) {
-        e.preventDefault();
-        inner.scrollLeft += (e.deltaY + e.deltaX) * 10;
-      }
       let touchStartX = 0, touchStartY = 0, scrollStart = 0;
       function onTouchStart(e) {
         touchStartX = e.touches[0].clientX;
@@ -1034,21 +1079,34 @@
         if (Math.abs(dx) > Math.abs(dy)) e.preventDefault();
         inner.scrollLeft = scrollStart + dx;
       }
-      page.addEventListener('wheel', onWheel, { passive: false });
-      page.addEventListener('touchstart', onTouchStart, { passive: true });
-      page.addEventListener('touchmove', onTouchMove, { passive: false });
+      inner.addEventListener('touchstart', onTouchStart, { passive: true });
+      inner.addEventListener('touchmove', onTouchMove, { passive: false });
+    }
+
+    function openLightbox(src) {
+      document.getElementById('lightbox-img').src = src;
+      document.getElementById('lightbox').classList.add('open');
+    }
+    function closeLightbox() {
+      document.getElementById('lightbox').classList.remove('open');
+    }
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
+    function artworksScroll(dir) {
+      const inner = document.getElementById('artworks-grid');
+      const step = Math.round(inner.clientWidth * 0.5);
+      inner.scrollBy({ left: dir * step, behavior: 'smooth' });
     }
 
     function showArtwork(id) {
       const a = artworks.find(x => x.id === id);
       if (!a) return;
-      document.getElementById('artwork-detail-title').textContent = a.title;
+      document.getElementById('artwork-detail-title').innerHTML = a.titleHtml || a.title;
       document.getElementById('artwork-detail-image').innerHTML =
         `<img src="${a.image}" alt="${a.title}" style="width:100%; display:block;" />`;
       document.getElementById('artwork-detail-meta').innerHTML = `
-        <h3>${a.title}</h3>
+        <h3>${a.titleHtml || a.title}</h3>
         <p class="artwork-medium">${a.medium}</p>
-        <p class="artwork-statement">${a.statement}</p>
       `;
       showPage('artwork-detail');
     }
